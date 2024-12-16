@@ -34,7 +34,6 @@ function fileReceiver(req, res, next) {
 
 app.get("/", viewClones);
 app.get("/timers", viewTimers);
-app.get("/data", getData); // Endpoint to fetch the latest data
 
 const server = app.listen(PORT, () => {
   console.log("Listening for files on port", PORT);
@@ -201,24 +200,10 @@ function viewTimers(req, res, next) {
     "const processingTimesChart = new Chart(processingTimesCtx, {type: 'line', data: {labels: labels, datasets: [{label: 'Processing Time (ms/line)', data: processingTimes, borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1, fill: false, }, ], }, options: { scales: { x: { title: {display: true, text: 'Filename', }, }, y: { title: { display: true, text: 'Time (ms/line)', }, }, }, }, });";
   page +=
     "const matchDetectTimesChart = new Chart(matchDetectTimesCtx, {type: 'line', data: {labels: labels, datasets: [{label: 'Match Detection Time (ms/line)', data: matchDetectTimes, borderColor: 'rgba(153, 102, 255, 1)', borderWidth: 1, fill: false, }, ], }, options: { scales: { x: { title: {display: true, text: 'Filename', }, }, y: { title: { display: true, text: 'Time (ms/line)', }, }, }, }, });";
-  //   page +=
-  //     "setInterval(async () => { const response = await fetch('/data'); const data = await response.json(); processingTimesChart.data.datasets[0].data = data.processingTimes; matchDetectTimesChart.data.datasets[0].data = data.matchDetectTimes; processingTimesChart.update(); matchDetectTimesChart.update(); }, 5000);";
   page += "</script>";
 
   page += "</BODY></HTML>";
   res.send(page);
-}
-
-// Endpoint to fetch the latest data
-function getData(req, res, next) {
-  const normalizedProcessingTimes = processingTimes.map((time, index) =>
-    (time / lineCounts[index]).toFixed(1)
-  );
-  const normalizedMatchDetectTimes = matchDetectTimes.map((time, index) =>
-    (time / lineCounts[index]).toFixed(1)
-  );
-
-  res.json({ normalizedProcessingTimes, normalizedMatchDetectTimes });
 }
 
 // Helper function to calculate average
@@ -272,7 +257,6 @@ function storeTimers(file) {
   matchDetectTimes.push(Number(timers["match"]) / 1000); // Normalize by the number of lines
   fileNames.push(file.name); // Store the filename
   lineCounts.push(lineCount); // Store the number of lines in the file
-  //   console.log("lines array" + lineCounts);
 }
 
 // Processing of the file
@@ -302,9 +286,6 @@ function processFile(filename, contents) {
       // and display more in depth statistics there. Examples include:
       // average times per file, average times per last 100 files, last 1000 files.
       // Perhaps throw in a graph over all files.
-      //   .then(console.log("process times" + processingTimes))
-      //   .then(console.log("filenames" + fileNames))
-      //   .then(PASS((file) => console.log("file count:", file.lineCount)))
 
       .catch(console.log)
   );
