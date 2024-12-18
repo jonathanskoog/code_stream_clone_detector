@@ -11,7 +11,7 @@ const FileStorage = require("./FileStorage");
 const EventEmitter = require("events");
 
 // EventEmitter.defaultMaxListeners = 100000;
-// Increase the limit to 20 or any other number
+// Increase the limit to avoid warnings
 
 const processingTimes = []; // Array to store the overall processing times
 const matchDetectTimes = []; // Array to store the match detection times

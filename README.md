@@ -20,6 +20,8 @@ The course is divided across two source code repositories:
 ## Apply
 If you wish to apply for the course, please visit [UniversityAdmissions](https://www.universityadmissions.se/intl/start) and search for "Applied Cloud Computing and Big Data".
 
-## Commands
-- docker compose -f stream-of-code.yaml up   
-- docker compose -f stream-of-code.yaml down
+## Installation
+- cd code_stream_clone_detector
+- Run the comand to start the application: docker compose -f stream-of-code.yaml up   
+- Open the browser and go to: http://localhost:8080/timers to view statistics
+- Run the command to clean the application: docker compose -f stream-of-code.yaml down
