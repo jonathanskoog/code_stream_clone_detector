@@ -10,7 +10,7 @@ const CloneStorage = require("./CloneStorage");
 const FileStorage = require("./FileStorage");
 const EventEmitter = require("events");
 
-EventEmitter.defaultMaxListeners = 100000;
+// EventEmitter.defaultMaxListeners = 100000;
 // Increase the limit to 20 or any other number
 
 const processingTimes = []; // Array to store the overall processing times
@@ -174,6 +174,7 @@ function viewTimers(req, res, next) {
     calculateAverage(matchDetectTimes.slice(-1000)) +
     " ms</p>\n";
 
+  // Add normalized graphs
   page +=
     "<h2>Overall Processing Times Graph Per File (Normalised to nr lines)</h2>\n ";
   page +=
@@ -182,6 +183,16 @@ function viewTimers(req, res, next) {
     "<h2>Match Detection Times Graph Per File (Normalised to nr lines)</h2>";
   page +=
     "<canvas id='matchDetectTimesChart' width='800' height='400'></canvas>";
+
+  // Add unnormalized graphs
+  page += "<h2>Unnormalized Processing Times</h2>\n";
+  page +=
+    "<canvas id='unnormalizedProcessingTimesChart' width='800' height='400'></canvas>";
+
+  page += "<h2>Unnormalized Match Detection Times</h2>\n";
+  page +=
+    "<canvas id='unnormalizedMatchDetectTimesChart' width='800' height='400'></canvas>";
+
   page += "<script>";
   page +=
     "const processingTimes = " +
@@ -192,6 +203,9 @@ function viewTimers(req, res, next) {
     JSON.stringify(normalizedMatchDetectTimes) +
     ";";
   page += "const labels = " + JSON.stringify(fileNames) + ";";
+
+  // JavaScript to render normalized charts
+
   page +=
     "const processingTimesCtx = document.getElementById('processingTimesChart').getContext('2d');";
   page +=
@@ -200,6 +214,54 @@ function viewTimers(req, res, next) {
     "const processingTimesChart = new Chart(processingTimesCtx, {type: 'line', data: {labels: labels, datasets: [{label: 'Processing Time (ms/line)', data: processingTimes, borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1, fill: false, }, ], }, options: { scales: { x: { title: {display: true, text: 'Filename', }, }, y: { title: { display: true, text: 'Time (ms/line)', }, }, }, }, });";
   page +=
     "const matchDetectTimesChart = new Chart(matchDetectTimesCtx, {type: 'line', data: {labels: labels, datasets: [{label: 'Match Detection Time (ms/line)', data: matchDetectTimes, borderColor: 'rgba(153, 102, 255, 1)', borderWidth: 1, fill: false, }, ], }, options: { scales: { x: { title: {display: true, text: 'Filename', }, }, y: { title: { display: true, text: 'Time (ms/line)', }, }, }, }, });";
+
+  // JavaScript to render unormalized charts
+  page +=
+    "const unnormalizedProcessingTimesCtx = document.getElementById('unnormalizedProcessingTimesChart').getContext('2d');\n";
+  page +=
+    "const unnormalizedProcessingTimesChart = new Chart(unnormalizedProcessingTimesCtx, {\n";
+  page += "  type: 'line',\n";
+  page += "  data: {\n";
+  page += "    labels: labels,\n";
+  page += "    datasets: [{\n";
+  page += "      label: 'Overall Unnormalized Processing Times (ms)',\n";
+  page += "      data: " + JSON.stringify(processingTimes) + ",\n";
+  page += "      borderColor: 'rgba(75, 192, 192, 1)',\n";
+  page += "      borderWidth: 1,\n";
+  page += "      fill: false,\n";
+  page += "    }]\n";
+  page += "  },\n";
+  page += "  options: {\n";
+  page += "    scales: {\n";
+  page += "      x: { title: { display: true, text: 'Filename' } },\n";
+  page += "      y: { title: { display: true, text: 'Time (ms)' } }\n";
+  page += "    }\n";
+  page += "  }\n";
+  page += "});\n";
+
+  page +=
+    "const unnormalizedMatchDetectTimesCtx = document.getElementById('unnormalizedMatchDetectTimesChart').getContext('2d');\n";
+  page +=
+    "const unnormalizedMatchDetectTimesChart = new Chart(unnormalizedMatchDetectTimesCtx, {\n";
+  page += "  type: 'line',\n";
+  page += "  data: {\n";
+  page += "    labels: labels,\n";
+  page += "    datasets: [{\n";
+  page += "      label: 'Unnormalized Match Detection Times (ms)',\n";
+  page += "      data: " + JSON.stringify(matchDetectTimes) + ",\n";
+  page += "      borderColor: 'rgba(153, 102, 255, 1)',\n";
+  page += "      borderWidth: 1,\n";
+  page += "      fill: false,\n";
+  page += "    }]\n";
+  page += "  },\n";
+  page += "  options: {\n";
+  page += "    scales: {\n";
+  page += "      x: { title: { display: true, text: 'Filename' } },\n";
+  page += "      y: { title: { display: true, text: 'Time (ms)' } }\n";
+  page += "    }\n";
+  page += "  }\n";
+  page += "});\n";
+
   page += "</script>";
 
   page += "</BODY></HTML>";
