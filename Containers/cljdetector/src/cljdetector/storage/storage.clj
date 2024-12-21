@@ -8,27 +8,36 @@
 (def dbname "cloneDetector")
 (def partition-size 100)
 (def hostname (or (System/getenv "DBHOST") DEFAULT-DBHOST))
-(def collnames ["files"  "chunks" "candidates" "clones"])
+(def collnames ["files"  "chunks" "candidates" "clones" "statusUpdates"])
+; New column statusUpdates added to collnames
+
 
 (defn print-statistics []
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)]
     (doseq [coll collnames]
       (println "db contains" (mc/count db coll) coll))))
 
+(defn print-status-updates []
+  (let [conn (mg/connect {:host hostname})
+        db (mg/get-db conn dbname)
+        collname "statusUpdates"]
+    (doseq [item (mc/find-maps db collname)]
+      (println "Status update" item))))
+
 (defn clear-db! []
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)]
     (doseq [coll collnames]
       (mc/drop db coll))))
 
 (defn count-items [collname]
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)]
     (mc/count db collname)))
 
 (defn store-files! [files]
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)
         collname "files"
         file-parted (partition-all partition-size files)]
@@ -37,7 +46,7 @@
          (catch Exception e []))))
 
 (defn store-chunks! [chunks]
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)
         collname "chunks"
         chunk-parted (partition-all partition-size (flatten chunks))]
@@ -45,29 +54,39 @@
       (mc/insert-batch db collname (map identity chunk-group)))))
 
 (defn store-clones! [clones]
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)
         collname "clones"
         clones-parted (partition-all partition-size clones)]
     (doseq [clone-group clones-parted]
       (mc/insert-batch db collname (map identity clone-group)))))
 
+; New function added to store status updates
+(defn addUpdate! [timestamp message]
+  (let [conn (mg/connect {:host hostname})
+        db (mg/get-db conn dbname)
+        collname "statusUpdates"]
+    (mc/insert db collname {:timestamp timestamp :message message})))
+    ;(println "Inserted:" {:timestamp timestamp :message message})))
+    ;; (print-status-updates)))
+
+
 (defn identify-candidates! []
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)
         collname "chunks"]
-     (mc/aggregate db collname
-                   [{$group {:_id {:chunkHash "$chunkHash"}
-                             :numberOfInstances {$count {}}
-                             :instances {$push {:fileName "$fileName"
-                                                :startLine "$startLine"
-                                                :endLine "$endLine"}}}}
-                    {$match {:numberOfInstances {$gt 1}}}
-                    {"$out" "candidates"} ])))
+    (mc/aggregate db collname
+                  [{$group {:_id {:chunkHash "$chunkHash"}
+                            :numberOfInstances {$count {}}
+                            :instances {$push {:fileName "$fileName"
+                                               :startLine "$startLine"
+                                               :endLine "$endLine"}}}}
+                   {$match {:numberOfInstances {$gt 1}}}
+                   {"$out" "candidates"}])))
 
 
 (defn consolidate-clones-and-source []
-  (let [conn (mg/connect {:host hostname})        
+  (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)
         collname "clones"]
     (mc/aggregate db collname
@@ -84,15 +103,14 @@
                       {$project {:contents {"$slice" ["$contents" "$$sourceStart" "$$sourceLength"]}}}
                       {$project
                        {:_id 0
-                        :contents 
+                        :contents
                         {"$reduce"
                          {:input "$contents"
                           :initialValue ""
                           :in {"$concat"
                                ["$$value"
                                 {"$cond" [{"$eq" ["$$value", ""]}, "", "\n"]}
-                                "$$this"]
-                               }}}}}]
+                                "$$this"]}}}}}]
                      :as "sourceContents"}}
                    {$project {:_id 0 :instances 1 :contents "$sourceContents.contents"}}])))
 
@@ -113,7 +131,7 @@
                   [{$match {"instances.fileName" {$all (map #(:fileName %) (:instances clj-cand))}}}
                    {$addFields {:candidate candidate}}
                    {$unwind "$instances"}
-                   {$project 
+                   {$project
                     {:matches
                      {$filter
                       {:input "$candidate.instances"
@@ -124,8 +142,7 @@
                                                  {$lte ["$instances.startLine" "$$this.endLine"]}]}]}]}}}
                      :instances 1
                      :numberOfInstances 1
-                     :candidate 1
-                     }}
+                     :candidate 1}}
                    {$match {$expr {$gt [{$size "$matches"} 0]}}}
                    {$group {:_id "$_id"
                             :candidate {$first "$candidate"}
@@ -137,7 +154,7 @@
 (defn remove-overlapping-candidates! [conn candidates]
   (let [db (mg/get-db conn dbname)
         collname "candidates"]
-      (mc/remove db collname {:_id {$in (map #(:_id %) candidates)}})))
+    (mc/remove db collname {:_id {$in (map #(:_id %) candidates)}})))
 
 (defn store-clone! [conn clone]
   (let [db (mg/get-db conn dbname)

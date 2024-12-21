@@ -4,7 +4,7 @@ version: "3.8"
 services:
   clone-detector:
     image: cljdetector
-    command: clear 
+    command: clear NoCloneID
     ports:
       - 8080:3000
     volumes:
