@@ -8,17 +8,22 @@
 (def source-dir (or (System/getenv "SOURCEDIR") "/tmp"))
 (def source-type #".*\.java")
 
+; New function ts-println added to print timestamped messages
 (defn ts-println [& args]
-  (println (.toString (java.time.LocalDateTime/now)) args))
+  (let [timestamp (.toString (java.time.LocalDateTime/now))
+        message (apply str args)]
+    (println timestamp message)
+    (storage/addUpdate! timestamp message)))
 
 (defn maybe-clear-db [args]
   (when (some #{"CLEAR"} (map string/upper-case args))
-      (ts-println "Clearing database...")
-      (storage/clear-db!)))
+    (ts-println "Clearing database...")
+    (storage/clear-db!)))
 
 (defn maybe-read-files [args]
   (when-not (some #{"NOREAD"} (map string/upper-case args))
     (ts-println "Reading and Processing files...")
+    ;(storage/print-status-updates)
     (let [chunk-param (System/getenv "CHUNKSIZE")
           chunk-size (if chunk-param (Integer/parseInt chunk-param) DEFAULT-CHUNKSIZE)
           file-handles (source-processor/traverse-directory source-dir source-type)
@@ -61,7 +66,8 @@
 
   (maybe-clear-db args)
   (maybe-read-files args)
-  (maybe-detect-clones args)
-  (maybe-list-clones args)
+  ;(maybe-detect-clones args)
+  ;(maybe-list-clones args)
   (ts-println "Summary")
-  (storage/print-statistics))
+  (storage/print-statistics)
+  (storage/print-status-updates))
