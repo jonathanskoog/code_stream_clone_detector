@@ -23,7 +23,6 @@
 (defn maybe-read-files [args]
   (when-not (some #{"NOREAD"} (map string/upper-case args))
     (ts-println "Reading and Processing files...")
-    ;(storage/print-status-updates)
     (let [chunk-param (System/getenv "CHUNKSIZE")
           chunk-size (if chunk-param (Integer/parseInt chunk-param) DEFAULT-CHUNKSIZE)
           file-handles (source-processor/traverse-directory source-dir source-type)

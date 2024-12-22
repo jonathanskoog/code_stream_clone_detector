@@ -4,6 +4,7 @@ version: "3.8"
 services:
   clone-detector:
     image: cljdetector
+    # Change the command to do all steps
     command: clear NoCloneID
     ports:
       - 8080:3000
@@ -28,6 +29,17 @@ services:
     volumes:
       - dbstorage:/data/db
       - dbconfig:/data/configdb
+
+  monitortool:
+    image: monitortool
+    ports:
+      - 3001:3001
+    environment:
+      DBHOST: dbstorage
+      DBPORT: 27017
+      DBNAME: cloneDetector
+    depends_on:
+      - dbstorage
     
 volumes:
   dbstorage:
