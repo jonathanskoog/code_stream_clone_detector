@@ -1,6 +1,6 @@
 # Docker Compose for All-At-Once Code Clone Detection
 
-version: "3.8"
+# version: "3.8"
 services:
   clone-detector:
     image: cljdetector
@@ -40,10 +40,9 @@ services:
       DBNAME: cloneDetector
     depends_on:
       - dbstorage
-    
+
 volumes:
   dbstorage:
   dbconfig:
   qc-volume:
     external: true
-    

@@ -65,8 +65,8 @@
 
   (maybe-clear-db args)
   (maybe-read-files args)
-  ;(maybe-detect-clones args)
-  ;(maybe-list-clones args)
+  (maybe-detect-clones args)
+  (maybe-list-clones args)
   (ts-println "Summary")
   (storage/print-statistics)
   (storage/print-status-updates))
