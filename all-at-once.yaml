@@ -5,7 +5,10 @@ services:
   clone-detector:
     image: cljdetector
     # Change the command to do all steps
-    command: clear NoCloneID
+    build:
+      context: Containers/cljdetector
+      dockerfile: Dockerfile
+    command: clear
     ports:
       - 8080:3000
     volumes:
@@ -34,6 +37,9 @@ services:
     image: monitortool
     ports:
       - 3001:3001
+    build:
+      context: Containers/cljdetector/MonitorTool
+      dockerfile: Dockerfile
     environment:
       DBHOST: dbstorage
       DBPORT: 27017
