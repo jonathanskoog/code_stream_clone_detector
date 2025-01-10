@@ -1,4 +1,5 @@
 # Big Data Analytics
+
 Work material for parts of a course "Applied Computing and Big Data" offered by Blekinge Institute of Technology.
 
 We are using the [Qualitas Corpus](http://qualitascorpus.com/) as a starting point for some fun very-nearly-big-data analysis.
@@ -6,6 +7,7 @@ We are using the [Qualitas Corpus](http://qualitascorpus.com/) as a starting poi
 Documentation and step-by-step instructions for this part of the course is found in the [Documentation](Documentation) directory.
 
 ## About the Course
+
 The course Applied Cloud Computing and Big Data is a 7.5 ECTS course offered by Blekinge Institute of Technology. The course is organised around three themes, and all three themes must be completed to complete the course:
 
 - Cloud Provisioning and Deployment
@@ -18,10 +20,20 @@ The course is divided across two source code repositories:
 - https://github.com/mickesv/BigDataAnalytics.git contains the instructions and source code for the Big Data Analytics part of the course.
 
 ## Apply
+
 If you wish to apply for the course, please visit [UniversityAdmissions](https://www.universityadmissions.se/intl/start) and search for "Applied Cloud Computing and Big Data".
 
-## Installation
+## Installation for the Stream of Code Clone Detector
+
 - cd code_stream_clone_detector
-- Run the comand to start the application: docker compose -f stream-of-code.yaml up   
+- Run the comand to start the application: docker compose -f stream-of-code.yaml up
 - Open the browser and go to: http://localhost:8080/timers to view statistics
 - Run the command to clean the application: docker compose -f stream-of-code.yaml down
+
+## Installation for All At Once Code Clone Detector
+
+- cd code_stream_clone_detector
+- Run the comand to build the application: docker compose -f all-at-once.yaml build
+- Run the comand to start the application: docker compose -f all-at-once.yaml up
+- Open the browser and go to: http://localhost:3001 to view statistics
+- Run the command to clean the application: docker compose -f all-at-once.yaml down
