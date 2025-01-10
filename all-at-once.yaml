@@ -4,7 +4,6 @@
 services:
   clone-detector:
     image: cljdetector
-    # Change the command to do all steps
     build:
       context: Containers/cljdetector
       dockerfile: Dockerfile
@@ -33,6 +32,7 @@ services:
       - dbstorage:/data/db
       - dbconfig:/data/configdb
 
+  # New service for the Monitor Tool
   monitortool:
     image: monitortool
     ports:

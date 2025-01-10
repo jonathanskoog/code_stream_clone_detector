@@ -18,6 +18,7 @@
     (doseq [coll collnames]
       (println "db contains" (mc/count db coll) coll))))
 
+; New function added to print status updates
 (defn print-status-updates []
   (let [conn (mg/connect {:host hostname})
         db (mg/get-db conn dbname)
@@ -67,8 +68,6 @@
         db (mg/get-db conn dbname)
         collname "statusUpdates"]
     (mc/insert db collname {:timestamp timestamp :message message})))
-    ;(println "Inserted:" {:timestamp timestamp :message message})))
-    ;; (print-status-updates)))
 
 
 (defn identify-candidates! []
