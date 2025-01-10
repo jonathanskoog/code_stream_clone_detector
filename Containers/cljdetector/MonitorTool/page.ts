@@ -45,11 +45,27 @@ function getStringGraph(graph: Graph) {
 }
 
 export default class HTMLPage {
+  style = "";
   head = "";
   body = "";
   graphs: Graph[] = [];
   headerScripts: string[] = [];
   constructor() {
+    this.style = `<style>
+      table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+      }
+      tr:nth-child(even) {
+        background-color: #dddddd;
+      }
+    </style>`;    
     this.head = "<TITLE>Data Visualization</TITLE>";
     this.body = "<H1>Data Visualization</H1>";
     this.graphs = [];
@@ -107,7 +123,10 @@ export default class HTMLPage {
       .join("\n");
     return `
     <HTML>
-        <HEAD>${this.head}\n${headerScripts}</HEAD>\n
+        <HEAD>
+        ${this.style}\n
+        ${this.head}\n${headerScripts}
+        </HEAD>\n
         <BODY>
             ${this.body}
             <script>

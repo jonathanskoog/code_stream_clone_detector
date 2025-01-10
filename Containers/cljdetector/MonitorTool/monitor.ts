@@ -75,15 +75,15 @@ const fetchStatistics = async () => {
       .sort({ timestamp: -1 })
       .toArray()) as any;
 
-    console.log("Current Statistics: \n");
-    console.log(`Files: ${filesCount} \n`);
-    console.log(`Chunks: ${chunksCount} \n`);
-    console.log(`Candidates: ${candidatesCount} \n`);
-    console.log(`Clones: ${clonesCount} \n`);
-    console.log("Recent Status Updates: \n");
-    statusUpdates.forEach((update) => {
-      console.log(`${update.timestamp}: ${update.message} \n`);
-    });
+    // console.log("Current Statistics: \n");
+    // console.log(`Files: ${filesCount} \n`);
+    // console.log(`Chunks: ${chunksCount} \n`);
+    // console.log(`Candidates: ${candidatesCount} \n`);
+    // console.log(`Clones: ${clonesCount} \n`);
+    // console.log("Recent Status Updates: \n");
+    // statusUpdates.forEach((update) => {
+    //   console.log(`${update.timestamp}: ${update.message} \n`);
+    // });
 
     const processingChunksDone = Boolean(
       statusUpdates.find(({ message }) =>
