@@ -76,8 +76,28 @@ export default class HTMLPage {
     );
   }
 
-  addContent(content: string) {
-    this.body += `\n${content}`;
+  addTable(columns: string[], rows: any[][]) {
+    this.addContent(
+      `<table>
+        <thead>
+          <tr>
+            ${columns.map((col) => `<th>${col}</th>\n`)}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(
+            (rows) =>
+              `<tr>
+                ${rows.map((row) => `<td>${row}</td>\n`)}
+               </tr>`
+          )}
+        </tbody>
+      </table>`
+    );
+  }
+
+  addContent(...content: string[]) {
+    content.forEach((str) => (this.body += `\n${str}`));
   }
 
   get() {

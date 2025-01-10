@@ -109,7 +109,7 @@ const fetchStatistics = async () => {
         chunks: chunksCount,
       });
     }
-    if (identifyCandidatesDone && !expandingCandidatesDone) {
+    if (clonesCount && identifyCandidatesDone && !expandingCandidatesDone) {
       identifiedCandidates.push({
         timestamp: new Date(now),
         candidates: candidatesCount,
@@ -137,6 +137,35 @@ app.get("/", async (req, res, next) => {
     res.send(page.get());
     return;
   }
+
+  const processTimePerChunk = processedChunks.map(
+    ({ timestamp, chunks }, i) => {
+      // Not 100% accurate due to starting order of containers
+      const prevTime =
+        processedChunks[i - 1]?.timestamp.getTime() || startTime.getTime();
+      const newChunks = chunks - (processedChunks[i - 1]?.chunks || 0);
+      const interval = timestamp.getTime() - prevTime;
+      return {
+        y: interval / (newChunks || 1), // chunks per interval
+        x: chunks,
+      };
+    }
+  );
+
+  const expandTimePerCandidate = identifiedClones.map(
+    ({ timestamp, clones }, i) => {
+      // Not 100% accurate due to starting order of containers
+      const prevTime =
+        processedChunks[i - 1]?.timestamp.getTime() || startTime.getTime();
+      const newClones = clones - (identifiedClones[i - 1]?.clones || 0);
+      const interval = timestamp.getTime() - prevTime;
+      return {
+        y: interval / (newClones || 1), // chunks per interval
+        x: clones,
+      };
+    }
+  );
+
   const chunksContraTime = {
     graphId: "processedGraph",
     label: "Data visualization",
@@ -168,19 +197,8 @@ app.get("/", async (req, res, next) => {
     xLabel: "Total chunks",
     yLabel: "Processing time (ms)",
     xScale: { type: "linear" },
-    data: processedChunks.map(({ timestamp, chunks }, i) => {
-      // Not 100% accurate due to starting order of containers
-      const prevTime =
-        processedChunks[i - 1]?.timestamp.getTime() || startTime.getTime();
-      const newChunks = chunks - (processedChunks[i - 1]?.chunks || 0);
-      const interval = timestamp.getTime() - prevTime;
-      return {
-        y: interval / (newChunks || 1), // chunks per interval
-        x: chunks,
-      };
-    }),
+    data: processTimePerChunk,
   };
-
   const expandedClones = {
     graphId: "expandedClonesGraph",
     label: "New clones compared to candidates",
@@ -193,9 +211,18 @@ app.get("/", async (req, res, next) => {
       const newClones = clones - (identifiedClones[i - 1]?.clones || 0);
       return {
         y: newClones, // chunks per interval
-        x: identifiedCandidates[i] || 0,
+        x: identifiedCandidates[i]?.candidates || 0,
       };
     }),
+  };
+
+  const expandedTimePerCandidate = {
+    graphId: "expandedTimePerCandidate",
+    label: "Time to expand candidate, (time to process vs clones)",
+    xLabel: "Clones",
+    yLabel: "Expand time per candidate (ms)",
+    xScale: { type: "linear" },
+    data: expandTimePerCandidate,
   };
 
   const candidates =
@@ -208,6 +235,15 @@ app.get("/", async (req, res, next) => {
       const { startLine, endLine } = instances[0];
       return avg + (endLine - startLine);
     }, 0) / (clonesCount || 1);
+
+  const avgCandidateExpand =
+    expandTimePerCandidate.reduce((sum, curr) => sum + curr.y, 0) /
+    (expandTimePerCandidate.length || 1);
+
+  const accurateProcessed = processTimePerChunk.slice(1);
+  const avgChunkProcessingTime =
+    accurateProcessed.reduce((sum, curr) => sum + curr.y, 0) /
+    (accurateProcessed.length || 1);
 
   page.addParagraphs(
     `Files: ${filesCount}`,
@@ -226,11 +262,52 @@ app.get("/", async (req, res, next) => {
   page.addTitle(
     "Processing time per chunk compared to total amount of processed chunks"
   );
-  page.addParagraphs("First value is inaccurate due to start up");
+  page.addParagraphs(
+    "First value is inaccurate due to start up",
+    `Average time to process one chunk: ${avgChunkProcessingTime} ms`
+  );
   page.addGraph(processingTime);
   page.addTitle("Expanded candidates vs remaining candidates");
   page.addParagraphs(`Total number of candidates: ${candidates}`);
   page.addGraph(expandedClones);
+  page.addParagraphs(
+    `Average expand time per candidate: ${avgCandidateExpand} ms`
+  );
+  page.addGraph(expandedTimePerCandidate);
+
+  const processChunksRows = chunksContraTime.data.slice(0, 100).map((d, i) => {
+    return [d.y, processTimePerChunk[i]?.x || "N/A", d.x];
+  });
+
+  const expandCandidatesRows = expandTimePerCandidate
+    .slice(0, 100)
+    .map((d, i) => {
+      const { candidates, timestamp } = identifiedCandidates[i];
+      const clones = identifiedClones[i]?.clones;
+      return [
+        candidates === undefined ? "N/A" : candidates,
+        clones === undefined ? "N/A" : clones,
+        d.y,
+        timestamp,
+      ];
+    });
+  page.addTitle("Table for process chunks step");
+
+  page.addTable(
+    ["Chunks", "Process time per chunk (ms)", "Seconds since start"],
+    [processChunksRows]
+  );
+  page.addTitle("Table for expand candidates step");
+  page.addTable(
+    [
+      "Candidates",
+      "Clones",
+      "Time to expand candidate (ms)",
+      "Seconds since start",
+    ],
+    [expandCandidatesRows]
+  );
+
   res.send(page.get());
 });
 
